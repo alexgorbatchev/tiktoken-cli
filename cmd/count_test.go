@@ -98,14 +98,14 @@ func TestRunCount(t *testing.T) {
 	}{
 		{
 			name:     "valid args count",
-			args:     []string{"Hello, world!"},
+			args:     []string{"Hello, world"},
 			encoding: "cl100k_base",
 			wantOut:  "3\n",
 			wantErr:  false,
 		},
 		{
 			name:     "valid model count",
-			args:     []string{"Hello, world!"},
+			args:     []string{"Hello, world"},
 			model:    "gpt-4o",
 			wantOut:  "3\n",
 			wantErr:  false,
