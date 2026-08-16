@@ -2,16 +2,24 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestRunEncode(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/encode.txt"
+	if err := os.WriteFile(tmpFile, []byte("Hello world\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
 	tests := []struct {
 		name      string
 		args      []string
 		model     string
 		encoding  string
+		file      string
 		wantOut   string
 		wantErr   bool
 		errSubstr string
@@ -19,6 +27,20 @@ func TestRunEncode(t *testing.T) {
 		{
 			name:     "encode argument cl100k_base",
 			args:     []string{"Hello world"},
+			encoding: "cl100k_base",
+			wantOut:  "9906 1917\n",
+			wantErr:  false,
+		},
+		{
+			name:     "encode file path argument",
+			args:     []string{tmpFile},
+			encoding: "cl100k_base",
+			wantOut:  "9906 1917\n",
+			wantErr:  false,
+		},
+		{
+			name:     "encode file flag",
+			file:     tmpFile,
 			encoding: "cl100k_base",
 			wantOut:  "9906 1917\n",
 			wantErr:  false,
@@ -44,9 +66,11 @@ func TestRunEncode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			encodeModel = tt.model
 			encodeEncoding = tt.encoding
+			encodeFile = tt.file
 			defer func() {
 				encodeModel = ""
 				encodeEncoding = "cl100k_base"
+				encodeFile = ""
 			}()
 
 			var outBuf bytes.Buffer

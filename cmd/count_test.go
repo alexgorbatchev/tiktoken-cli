@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -13,13 +14,35 @@ func (e *errorReader) Read(p []byte) (n int, err error) {
 	return 0, fmt.Errorf("read error simulated")
 }
 
-func TestGetText(t *testing.T) {
-	got, err := getText([]string{"direct", "args"})
+func TestGetTextWithFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/test.txt"
+	if err := os.WriteFile(tmpFile, []byte("Hello file world\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
+	// Test positional file path
+	got, err := getText([]string{tmpFile}, "")
 	if err != nil {
 		t.Fatalf("getText() error = %v", err)
 	}
-	if got != "direct args" {
-		t.Errorf("getText() = %q, want %q", got, "direct args")
+	if got != "Hello file world" {
+		t.Errorf("getText() = %q, want %q", got, "Hello file world")
+	}
+
+	// Test explicit file flag
+	got, err = getText([]string{}, tmpFile)
+	if err != nil {
+		t.Fatalf("getText() error = %v", err)
+	}
+	if got != "Hello file world" {
+		t.Errorf("getText() = %q, want %q", got, "Hello file world")
+	}
+
+	// Test non-existent file path flag error
+	_, err = getText([]string{}, tmpDir+"/nonexistent.txt")
+	if err == nil {
+		t.Errorf("expected error for non-existent file, got nil")
 	}
 }
 
@@ -70,21 +93,15 @@ func TestGetTextFromReader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var rdr = strings.NewReader(tt.input)
-			var errRdr *errorReader
-			var r = rdr
 			if tt.useErrRdr {
-				errRdr = &errorReader{}
-				got, err := getTextFromReader(tt.args, errRdr, tt.isTerminal)
+				_, err := getTextFromReader(tt.args, &errorReader{}, tt.isTerminal)
 				if (err != nil) != tt.wantErr {
 					t.Fatalf("getTextFromReader() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				if got != tt.want {
-					t.Errorf("got %q, want %q", got, tt.want)
 				}
 				return
 			}
 
+			r := strings.NewReader(tt.input)
 			got, err := getTextFromReader(tt.args, r, tt.isTerminal)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("getTextFromReader() error = %v, wantErr %v", err, tt.wantErr)
@@ -97,27 +114,41 @@ func TestGetTextFromReader(t *testing.T) {
 }
 
 func TestRunCount(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/count.txt"
+	if err := os.WriteFile(tmpFile, []byte("Hello, world!\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
 	tests := []struct {
 		name      string
 		args      []string
 		model     string
 		encoding  string
+		file      string
 		wantOut   string
 		wantErr   bool
 		errSubstr string
 	}{
 		{
 			name:     "valid args count",
-			args:     []string{"Hello, world"},
+			args:     []string{"Hello, world!"},
 			encoding: "cl100k_base",
-			wantOut:  "3\n",
+			wantOut:  "4\n",
+			wantErr:  false,
+		},
+		{
+			name:     "valid file count",
+			file:     tmpFile,
+			encoding: "cl100k_base",
+			wantOut:  "4\n",
 			wantErr:  false,
 		},
 		{
 			name:     "valid model count",
-			args:     []string{"Hello, world"},
+			args:     []string{"Hello, world!"},
 			model:    "gpt-4o",
-			wantOut:  "3\n",
+			wantOut:  "4\n",
 			wantErr:  false,
 		},
 		{
@@ -134,9 +165,11 @@ func TestRunCount(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			countModel = tt.model
 			countEncoding = tt.encoding
+			countFile = tt.file
 			defer func() {
 				countModel = ""
 				countEncoding = "cl100k_base"
+				countFile = ""
 			}()
 
 			var outBuf bytes.Buffer

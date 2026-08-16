@@ -13,14 +13,15 @@ import (
 var (
 	countModel    string
 	countEncoding string
+	countFile     string
 )
 
 var countCmd = &cobra.Command{
-	Use:   "count [text]",
-	Short: "Count tokens in the given text",
-	Long: `Count the number of tokens in the provided text using the specified model or encoding.
+	Use:   "count [text|file]",
+	Short: "Count tokens in the given text or file",
+	Long: `Count the number of tokens in the provided text or file using the specified model or encoding.
 
-If no text is provided as an argument, it reads from stdin.
+If no text or file argument is provided, it reads from stdin.
 
 Available encodings:
   - o200k_base   (gpt-4o, gpt-4.1, gpt-4.5)
@@ -32,6 +33,12 @@ Examples:
   # Count tokens from argument
   tiktoken count "Hello, world!"
 
+  # Count tokens from a file path argument
+  tiktoken count myfile.txt
+
+  # Count tokens using file flag
+  tiktoken count -f myfile.txt
+
   # Count tokens from stdin
   echo "Hello, world!" | tiktoken count
 
@@ -39,10 +46,7 @@ Examples:
   tiktoken count -m gpt-4o "Hello, world!"
 
   # Count tokens using a specific encoding
-  tiktoken count -e o200k_base "Hello, world!"
-
-  # Count tokens from a file
-  cat myfile.txt | tiktoken count`,
+  tiktoken count -e o200k_base "Hello, world!"`,
 	RunE: runCount,
 }
 
@@ -50,10 +54,11 @@ func init() {
 	rootCmd.AddCommand(countCmd)
 	countCmd.Flags().StringVarP(&countModel, "model", "m", "", "OpenAI model name (e.g., gpt-4o, gpt-4, gpt-3.5-turbo)")
 	countCmd.Flags().StringVarP(&countEncoding, "encoding", "e", "cl100k_base", "Encoding name (o200k_base, cl100k_base, p50k_base, r50k_base)")
+	countCmd.Flags().StringVarP(&countFile, "file", "f", "", "Path to input file")
 }
 
 func runCount(cmd *cobra.Command, args []string) error {
-	text, err := getText(args)
+	text, err := getText(args, countFile)
 	if err != nil {
 		return err
 	}
@@ -69,7 +74,24 @@ func runCount(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getText(args []string) (string, error) {
+func getText(args []string, filePath string) (string, error) {
+	if filePath != "" {
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			return "", fmt.Errorf("failed to read file %s: %w", filePath, err)
+		}
+		return strings.TrimSuffix(string(content), "\n"), nil
+	}
+
+	if len(args) == 1 {
+		if info, err := os.Stat(args[0]); err == nil && !info.IsDir() {
+			content, err := os.ReadFile(args[0])
+			if err == nil {
+				return strings.TrimSuffix(string(content), "\n"), nil
+			}
+		}
+	}
+
 	stat, _ := os.Stdin.Stat()
 	var isTerminal bool
 	if stat != nil {

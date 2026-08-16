@@ -77,6 +77,12 @@ test-integration: build
     echo "=========================================="
     echo ""
 
+    TMP_TEXT_FILE=$(mktemp /tmp/tiktoken_sample.XXXXXX.txt)
+    TMP_TOKEN_FILE=$(mktemp /tmp/tiktoken_tokens.XXXXXX.txt)
+    echo -n "Hello world" > "$TMP_TEXT_FILE"
+    echo -n "9906 1917" > "$TMP_TOKEN_FILE"
+    trap 'rm -f "$TMP_TEXT_FILE" "$TMP_TOKEN_FILE"' EXIT
+
     echo -e "${YELLOW}=== Version Command ===${NC}"
     run_test_contains "version command" "$BIN version" "tiktoken version"
 
@@ -127,7 +133,12 @@ test-integration: build
     run_test "decode with o200k_base encoding" "$BIN decode -e o200k_base 13225 2375" "Hello world"
 
     echo ""
-    echo -e "${YELLOW}=== Round-trip Tests ===${NC}"
+    echo -e "${YELLOW}=== File Input Tests ===${NC}"
+    run_test "count from file path argument" "$BIN count '$TMP_TEXT_FILE'" "2"
+    run_test "count using -f flag" "$BIN count -f '$TMP_TEXT_FILE'" "2"
+    run_test "default count from file path" "$BIN '$TMP_TEXT_FILE'" "2"
+    run_test "encode from file flag" "$BIN encode -f '$TMP_TEXT_FILE'" "9906 1917"
+    run_test "decode from file flag" "$BIN decode -f '$TMP_TOKEN_FILE'" "Hello world"
     run_test "encode then decode (cl100k_base)" "$BIN encode 'Hello world' | $BIN decode" "Hello world"
     run_test "encode then decode (o200k_base)" "$BIN encode -e o200k_base 'Hello world' | $BIN decode -e o200k_base" "Hello world"
     run_test "encode then decode unicode" "$BIN encode '你好世界' | $BIN decode" "你好世界"

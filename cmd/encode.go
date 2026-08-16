@@ -10,18 +10,25 @@ import (
 var (
 	encodeModel    string
 	encodeEncoding string
+	encodeFile     string
 )
 
 var encodeCmd = &cobra.Command{
-	Use:   "encode [text]",
-	Short: "Encode text to token IDs",
-	Long: `Encode the provided text into token IDs using the specified model or encoding.
+	Use:   "encode [text|file]",
+	Short: "Encode text or file to token IDs",
+	Long: `Encode the provided text or file into token IDs using the specified model or encoding.
 
-If no text is provided as an argument, it reads from stdin.
+If no text or file is provided, it reads from stdin.
 
 Examples:
-  # Encode text
+  # Encode text argument
   tiktoken encode "Hello, world!"
+
+  # Encode file path argument
+  tiktoken encode myfile.txt
+
+  # Encode using file flag
+  tiktoken encode -f myfile.txt
 
   # Encode using a specific model
   tiktoken encode -m gpt-4o "Hello, world!"
@@ -38,10 +45,11 @@ func init() {
 	rootCmd.AddCommand(encodeCmd)
 	encodeCmd.Flags().StringVarP(&encodeModel, "model", "m", "", "OpenAI model name (e.g., gpt-4o, gpt-4, gpt-3.5-turbo)")
 	encodeCmd.Flags().StringVarP(&encodeEncoding, "encoding", "e", "cl100k_base", "Encoding name (o200k_base, cl100k_base, p50k_base, r50k_base)")
+	encodeCmd.Flags().StringVarP(&encodeFile, "file", "f", "", "Path to input file")
 }
 
 func runEncode(cmd *cobra.Command, args []string) error {
-	text, err := getText(args)
+	text, err := getText(args, encodeFile)
 	if err != nil {
 		return err
 	}

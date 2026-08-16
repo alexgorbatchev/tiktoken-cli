@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -19,11 +20,18 @@ func TestVersionCmd(t *testing.T) {
 }
 
 func TestRootCmdExecution(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/root.txt"
+	if err := os.WriteFile(tmpFile, []byte("hello world\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
 	tests := []struct {
 		name      string
 		args      []string
 		model     string
 		encoding  string
+		file      string
 		wantOut   string
 		contains  string
 		wantErr   bool
@@ -32,6 +40,20 @@ func TestRootCmdExecution(t *testing.T) {
 		{
 			name:     "root count from arg",
 			args:     []string{"hello world"},
+			encoding: "cl100k_base",
+			wantOut:  "2\n",
+			wantErr:  false,
+		},
+		{
+			name:     "root count from file arg",
+			args:     []string{tmpFile},
+			encoding: "cl100k_base",
+			wantOut:  "2\n",
+			wantErr:  false,
+		},
+		{
+			name:     "root count from file flag",
+			file:     tmpFile,
 			encoding: "cl100k_base",
 			wantOut:  "2\n",
 			wantErr:  false,
@@ -63,9 +85,11 @@ func TestRootCmdExecution(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rootModel = tt.model
 			rootEncoding = tt.encoding
+			rootFile = tt.file
 			defer func() {
 				rootModel = ""
 				rootEncoding = "cl100k_base"
+				rootFile = ""
 			}()
 
 			var outBuf bytes.Buffer

@@ -15,14 +15,15 @@ var (
 	// Root command flags (for default count behavior)
 	rootModel    string
 	rootEncoding string
+	rootFile     string
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "tiktoken [text]",
+	Use:   "tiktoken [text|file]",
 	Short: "Count, encode, and decode tokens for OpenAI models",
 	Long: `tiktoken is a fast command-line tool for tokenizing text using OpenAI model encodings.
 
-When called without a subcommand, it defaults to counting tokens in text using the
+When called without a subcommand, it defaults to counting tokens in text or a file using the
 cl100k_base encoding (used by GPT-4 and GPT-3.5-turbo).
 
 Examples:
@@ -31,6 +32,12 @@ Examples:
 
   # Count tokens from argument
   tiktoken "Hello, world!"
+
+  # Count tokens from a file
+  tiktoken myfile.txt
+
+  # Count tokens using file flag
+  tiktoken -f myfile.txt
 
   # Count tokens for a specific model
   tiktoken -m gpt-4o "Hello, world!"
@@ -68,16 +75,17 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.Flags().StringVarP(&rootModel, "model", "m", "", "OpenAI model name (e.g., gpt-4o, gpt-4, gpt-3.5-turbo)")
 	rootCmd.Flags().StringVarP(&rootEncoding, "encoding", "e", "cl100k_base", "Encoding name (o200k_base, cl100k_base, p50k_base, r50k_base)")
+	rootCmd.Flags().StringVarP(&rootFile, "file", "f", "", "Path to input file")
 }
 
 // runRootCount is the default behavior when no subcommand is provided
 func runRootCount(cmd *cobra.Command, args []string) error {
 	stat, _ := os.Stdin.Stat()
-	if len(args) == 0 && stat != nil && (stat.Mode()&os.ModeCharDevice) != 0 {
+	if len(args) == 0 && rootFile == "" && stat != nil && (stat.Mode()&os.ModeCharDevice) != 0 {
 		return cmd.Help()
 	}
 
-	text, err := getText(args)
+	text, err := getText(args, rootFile)
 	if err != nil {
 		return err
 	}

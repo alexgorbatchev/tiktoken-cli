@@ -2,19 +2,42 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestGetTokens(t *testing.T) {
-	got, err := getTokens([]string{"123", "456"})
+func TestGetTokensWithFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/tokens.txt"
+	if err := os.WriteFile(tmpFile, []byte("15339 1917 0\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
+	// Test positional file path
+	got, err := getTokens([]string{tmpFile}, "")
 	if err != nil {
 		t.Fatalf("getTokens() error = %v", err)
 	}
-	want := []int{123, 456}
+	want := []int{15339, 1917, 0}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("getTokens() = %v, want %v", got, want)
+	}
+
+	// Test explicit file flag
+	got, err = getTokens([]string{}, tmpFile)
+	if err != nil {
+		t.Fatalf("getTokens() error = %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("getTokens() = %v, want %v", got, want)
+	}
+
+	// Test non-existent file error
+	_, err = getTokens([]string{}, tmpDir+"/nonexistent.txt")
+	if err == nil {
+		t.Errorf("expected error for non-existent file, got nil")
 	}
 }
 
@@ -117,11 +140,18 @@ func TestGetTokensFromReader(t *testing.T) {
 }
 
 func TestRunDecode(t *testing.T) {
+	tmpDir := t.TempDir()
+	tmpFile := tmpDir + "/decode_tokens.txt"
+	if err := os.WriteFile(tmpFile, []byte("15339 1917 0\n"), 0644); err != nil {
+		t.Fatalf("failed to write tmp file: %v", err)
+	}
+
 	tests := []struct {
 		name      string
 		args      []string
 		model     string
 		encoding  string
+		file      string
 		wantOut   string
 		wantErr   bool
 		errSubstr string
@@ -129,6 +159,20 @@ func TestRunDecode(t *testing.T) {
 		{
 			name:     "decode arguments cl100k_base",
 			args:     []string{"15339", "1917", "0"},
+			encoding: "cl100k_base",
+			wantOut:  "hello world!\n",
+			wantErr:  false,
+		},
+		{
+			name:     "decode file argument cl100k_base",
+			args:     []string{tmpFile},
+			encoding: "cl100k_base",
+			wantOut:  "hello world!\n",
+			wantErr:  false,
+		},
+		{
+			name:     "decode file flag cl100k_base",
+			file:     tmpFile,
 			encoding: "cl100k_base",
 			wantOut:  "hello world!\n",
 			wantErr:  false,
@@ -154,9 +198,11 @@ func TestRunDecode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			decodeModel = tt.model
 			decodeEncoding = tt.encoding
+			decodeFile = tt.file
 			defer func() {
 				decodeModel = ""
 				decodeEncoding = "cl100k_base"
+				decodeFile = ""
 			}()
 
 			var outBuf bytes.Buffer
