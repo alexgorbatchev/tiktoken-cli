@@ -25,6 +25,7 @@ func TestRootCmdExecution(t *testing.T) {
 		model     string
 		encoding  string
 		wantOut   string
+		contains  string
 		wantErr   bool
 		errSubstr string
 	}{
@@ -36,10 +37,10 @@ func TestRootCmdExecution(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:    "root count zero args help",
-			args:    []string{},
-			wantOut: "",
-			wantErr: false,
+			name:     "root count zero args help",
+			args:     []string{},
+			contains: "Usage:",
+			wantErr:  false,
 		},
 		{
 			name:     "root count with model",
@@ -80,10 +81,25 @@ func TestRootCmdExecution(t *testing.T) {
 					t.Errorf("expected error containing %q, got %v", tt.errSubstr, err)
 				}
 			} else {
-				if outBuf.String() != tt.wantOut {
+				if tt.contains != "" {
+					if !strings.Contains(outBuf.String(), tt.contains) {
+						t.Errorf("got output %q, expected to contain %q", outBuf.String(), tt.contains)
+					}
+				} else if outBuf.String() != tt.wantOut {
 					t.Errorf("got output %q, want %q", outBuf.String(), tt.wantOut)
 				}
 			}
 		})
+	}
+}
+
+func TestExecuteRootCmd(t *testing.T) {
+	rootCmd.SetArgs([]string{"version"})
+	var buf bytes.Buffer
+	versionCmd.SetOut(&buf)
+	rootCmd.SetOut(&buf)
+	Execute()
+	if !strings.Contains(buf.String(), "tiktoken version") {
+		t.Errorf("Execute() with version subcommand failed, output:\n%s", buf.String())
 	}
 }
