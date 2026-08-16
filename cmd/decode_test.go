@@ -6,6 +6,17 @@ import (
 	"testing"
 )
 
+func TestGetTokens(t *testing.T) {
+	got, err := getTokens([]string{"123", "456"})
+	if err != nil {
+		t.Fatalf("getTokens() error = %v", err)
+	}
+	want := []int{123, 456}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("getTokens() = %v, want %v", got, want)
+	}
+}
+
 func TestGetTokensFromReader(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -118,7 +129,7 @@ func TestRunDecode(t *testing.T) {
 			name:     "decode arguments cl100k_base",
 			args:     []string{"15339", "1917", "0"},
 			encoding: "cl100k_base",
-			wantOut:  "Hello, world!\n",
+			wantOut:  "hello world!\n",
 			wantErr:  false,
 		},
 		{

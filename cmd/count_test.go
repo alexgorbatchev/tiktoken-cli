@@ -13,6 +13,16 @@ func (e *errorReader) Read(p []byte) (n int, err error) {
 	return 0, fmt.Errorf("read error simulated")
 }
 
+func TestGetText(t *testing.T) {
+	got, err := getText([]string{"direct", "args"})
+	if err != nil {
+		t.Fatalf("getText() error = %v", err)
+	}
+	if got != "direct args" {
+		t.Errorf("getText() = %q, want %q", got, "direct args")
+	}
+}
+
 func TestGetTextFromReader(t *testing.T) {
 	tests := []struct {
 		name       string
