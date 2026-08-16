@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkoukk/tiktoken-go"
 	"github.com/spf13/cobra"
 )
 
@@ -53,9 +52,9 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("tiktoken version %s\n", version)
-		fmt.Printf("  commit: %s\n", commit)
-		fmt.Printf("  built:  %s\n", date)
+		fmt.Fprintf(cmd.OutOrStdout(), "tiktoken version %s\n", version)
+		fmt.Fprintf(cmd.OutOrStdout(), "  commit: %s\n", commit)
+		fmt.Fprintf(cmd.OutOrStdout(), "  built:  %s\n", date)
 	},
 }
 
@@ -74,9 +73,8 @@ func init() {
 
 // runRootCount is the default behavior when no subcommand is provided
 func runRootCount(cmd *cobra.Command, args []string) error {
-	// If no args and no stdin, show help
 	stat, _ := os.Stdin.Stat()
-	if len(args) == 0 && (stat.Mode()&os.ModeCharDevice) != 0 {
+	if len(args) == 0 && stat != nil && (stat.Mode()&os.ModeCharDevice) != 0 {
 		return cmd.Help()
 	}
 
@@ -85,22 +83,13 @@ func runRootCount(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var enc *tiktoken.Tiktoken
-
-	if rootModel != "" {
-		enc, err = tiktoken.EncodingForModel(rootModel)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding for model %s: %w", rootModel, err)
-		}
-	} else {
-		enc, err = tiktoken.GetEncoding(rootEncoding)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding %s: %w", rootEncoding, err)
-		}
+	enc, err := resolveEncoding(rootModel, rootEncoding)
+	if err != nil {
+		return err
 	}
 
 	tokens := enc.Encode(text, nil, nil)
-	fmt.Println(len(tokens))
+	fmt.Fprintln(cmd.OutOrStdout(), len(tokens))
 
 	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkoukk/tiktoken-go"
 	"github.com/spf13/cobra"
 )
 
@@ -47,18 +46,9 @@ func runEncode(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var enc *tiktoken.Tiktoken
-
-	if encodeModel != "" {
-		enc, err = tiktoken.EncodingForModel(encodeModel)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding for model %s: %w", encodeModel, err)
-		}
-	} else {
-		enc, err = tiktoken.GetEncoding(encodeEncoding)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding %s: %w", encodeEncoding, err)
-		}
+	enc, err := resolveEncoding(encodeModel, encodeEncoding)
+	if err != nil {
+		return err
 	}
 
 	tokens := enc.Encode(text, nil, nil)
@@ -68,7 +58,7 @@ func runEncode(cmd *cobra.Command, args []string) error {
 	for i, t := range tokens {
 		tokenStrs[i] = fmt.Sprintf("%d", t)
 	}
-	fmt.Println(strings.Join(tokenStrs, " "))
+	fmt.Fprintln(cmd.OutOrStdout(), strings.Join(tokenStrs, " "))
 
 	return nil
 }

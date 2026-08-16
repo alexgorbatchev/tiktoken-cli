@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkoukk/tiktoken-go"
 	"github.com/spf13/cobra"
 )
 
@@ -51,39 +50,37 @@ func runDecode(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var enc *tiktoken.Tiktoken
-
-	if decodeModel != "" {
-		enc, err = tiktoken.EncodingForModel(decodeModel)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding for model %s: %w", decodeModel, err)
-		}
-	} else {
-		enc, err = tiktoken.GetEncoding(decodeEncoding)
-		if err != nil {
-			return fmt.Errorf("failed to get encoding %s: %w", decodeEncoding, err)
-		}
+	enc, err := resolveEncoding(decodeModel, decodeEncoding)
+	if err != nil {
+		return err
 	}
 
 	text := enc.Decode(tokens)
-	fmt.Println(text)
+	fmt.Fprintln(cmd.OutOrStdout(), text)
 
 	return nil
 }
 
 func getTokens(args []string) ([]int, error) {
+	stat, _ := os.Stdin.Stat()
+	var isTerminal bool
+	if stat != nil {
+		isTerminal = (stat.Mode() & os.ModeCharDevice) != 0
+	}
+	return getTokensFromReader(args, os.Stdin, isTerminal)
+}
+
+func getTokensFromReader(args []string, r io.Reader, isTerminal bool) ([]int, error) {
 	var tokenStrs []string
 
 	if len(args) > 0 {
 		tokenStrs = args
 	} else {
-		// Check if stdin has data
-		stat, _ := os.Stdin.Stat()
-		if (stat.Mode() & os.ModeCharDevice) != 0 {
+		if isTerminal {
 			return nil, fmt.Errorf("no token IDs provided. Either pass token IDs as arguments or pipe through stdin")
 		}
 
-		reader := bufio.NewReader(os.Stdin)
+		reader := bufio.NewReader(r)
 		var builder strings.Builder
 
 		for {
