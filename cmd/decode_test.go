@@ -14,9 +14,11 @@ func TestGetTokensFromReader(t *testing.T) {
 		isTerminal bool
 		want       []int
 		wantErr    bool
+		errSubstr  string
+		useErrRdr  bool
 	}{
 		{
-			name:       "from args",
+			name:       "from arguments",
 			args:       []string{"15339", "1917", "0"},
 			input:      "",
 			isTerminal: false,
@@ -24,39 +26,71 @@ func TestGetTokensFromReader(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "from stdin piped",
+			name:       "from stdin whitespace separated",
 			args:       []string{},
-			input:      "15339 1917 0\n",
+			input:      "15339 1917\n0\n",
 			isTerminal: false,
 			want:       []int{15339, 1917, 0},
 			wantErr:    false,
 		},
 		{
-			name:       "invalid token integer",
-			args:       []string{"abc"},
-			input:      "",
-			isTerminal: false,
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "empty input terminal",
+			name:       "terminal without args error",
 			args:       []string{},
 			input:      "",
 			isTerminal: true,
 			want:       nil,
 			wantErr:    true,
+			errSubstr:  "no token IDs provided",
+		},
+		{
+			name:       "invalid token integer arg",
+			args:       []string{"15339", "invalid", "0"},
+			input:      "",
+			isTerminal: false,
+			want:       nil,
+			wantErr:    true,
+			errSubstr:  "invalid token ID \"invalid\"",
+		},
+		{
+			name:       "reader error",
+			args:       []string{},
+			input:      "",
+			isTerminal: false,
+			want:       nil,
+			wantErr:    true,
+			useErrRdr:  true,
+		},
+		{
+			name:       "empty input result error",
+			args:       []string{},
+			input:      "   \n  \t ",
+			isTerminal: false,
+			want:       nil,
+			wantErr:    true,
+			errSubstr:  "no valid token IDs provided",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rdr := strings.NewReader(tt.input)
-			got, err := getTokensFromReader(tt.args, rdr, tt.isTerminal)
+			if tt.useErrRdr {
+				_, err := getTokensFromReader(tt.args, &errorReader{}, tt.isTerminal)
+				if (err != nil) != tt.wantErr {
+					t.Fatalf("getTokensFromReader() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+
+			r := strings.NewReader(tt.input)
+			got, err := getTokensFromReader(tt.args, r, tt.isTerminal)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("getTokensFromReader() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr {
+			if tt.wantErr {
+				if err == nil || (tt.errSubstr != "" && !strings.Contains(err.Error(), tt.errSubstr)) {
+					t.Errorf("expected error containing %q, got %v", tt.errSubstr, err)
+				}
+			} else {
 				if len(got) != len(tt.want) {
 					t.Fatalf("got len %d, want len %d", len(got), len(tt.want))
 				}
@@ -82,9 +116,9 @@ func TestRunDecode(t *testing.T) {
 	}{
 		{
 			name:     "decode arguments cl100k_base",
-			args:     []string{"9906", "1917"},
+			args:     []string{"15339", "1917", "0"},
 			encoding: "cl100k_base",
-			wantOut:  "Hello world\n",
+			wantOut:  "Hello, world!\n",
 			wantErr:  false,
 		},
 		{
@@ -96,8 +130,8 @@ func TestRunDecode(t *testing.T) {
 		},
 		{
 			name:      "decode invalid model",
-			args:      []string{"9906", "1917"},
-			model:     "bad-model",
+			args:      []string{"15339"},
+			model:     "invalid-model",
 			wantOut:   "",
 			wantErr:   true,
 			errSubstr: "failed to get encoding for model",
