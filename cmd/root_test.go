@@ -36,6 +36,12 @@ func TestRootCmdExecution(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name:    "root count zero args help",
+			args:    []string{},
+			wantOut: "",
+			wantErr: false,
+		},
+		{
 			name:     "root count with model",
 			args:     []string{"hello world"},
 			model:    "gpt-4o",
