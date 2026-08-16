@@ -1,6 +1,6 @@
 ---
 created_on: 2025-08-16 08:12
-last_modified: 2025-08-16 08:12
+last_modified: 2025-08-16 08:45
 status: current
 ---
 
@@ -23,7 +23,7 @@ CLI tool for tokenizing, counting, encoding, and decoding text with OpenAI tikto
 
 ## Conventions
 - Structure Cobra subcommands as individual files inside `cmd/` (e.g., `cmd/count.go`, `cmd/encode.go`, `cmd/decode.go`, `cmd/models.go`).
-- Input resolution: Use `getText(args)` or `getTokens(args)` helper functions in `cmd/` to accept positional arguments or fall back to reading `os.Stdin`.
+- Input resolution: Use `getText(args, filePath)` or `getTokens(args, filePath)` helper functions in `cmd/` to accept explicit file paths (`-f`/`--file`), single positional file path arguments, inline positional string arguments, or fall back to reading `os.Stdin`.
 - Encoding resolution: Check `--model` (`-m`) first via `tiktoken.EncodingForModel`, falling back to `--encoding` (`-e`, default `cl100k_base`) via `tiktoken.GetEncoding`.
 - Keep output plain and copy-pasteable (number for `count`, space-separated IDs for `encode`, text string for `decode`).
 
