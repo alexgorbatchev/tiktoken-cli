@@ -28,7 +28,8 @@ Or clone and build:
 ```bash
 git clone https://github.com/alexgorbatchev/tiktoken-cli.git
 cd tiktoken-cli
-go build -o tiktoken
+just build
+# Compiled binary is output to ./bin/tiktoken
 ```
 
 ## Usage
@@ -135,12 +136,22 @@ echo "cl100k_base: $(tiktoken count -e cl100k_base "$TEXT")"
 echo "p50k_base: $(tiktoken count -e p50k_base "$TEXT")"
 ```
 
-## Testing
+## Development & Testing
 
-Run the integration tests:
+Build, run, and test with `just`:
 
 ```bash
-./test.sh
+# Build binary to ./bin/tiktoken
+just build
+
+# Run binary with arguments
+just run "Hello, world!"
+
+# Run unit and integration tests
+just test
+
+# Run linter
+just lint
 ```
 
 ## License

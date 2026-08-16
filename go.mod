@@ -1,6 +1,6 @@
 module github.com/alexgorbatchev/tiktoken-cli
 
-go 1.25
+go 1.26
 
 require (
 	github.com/pkoukk/tiktoken-go v0.1.7
