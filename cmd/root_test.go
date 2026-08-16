@@ -93,6 +93,23 @@ func TestRootCmdExecution(t *testing.T) {
 	}
 }
 
+func TestRootCmdHelpText(t *testing.T) {
+	var buf bytes.Buffer
+	rootCmd.SetOut(&buf)
+	_ = rootCmd.Help()
+
+	output := buf.String()
+	if strings.Contains(output, "tiktoken-go") {
+		t.Errorf("rootCmd help description contains unwanted library implementation details ('tiktoken-go')")
+	}
+	if !strings.Contains(output, "fast command-line tool for tokenizing text") {
+		t.Errorf("rootCmd help description missing expected long description, got:\n%s", output)
+	}
+	if rootCmd.Short != "Count, encode, and decode tokens for OpenAI models" {
+		t.Errorf("rootCmd.Short = %q, want 'Count, encode, and decode tokens for OpenAI models'", rootCmd.Short)
+	}
+}
+
 func TestExecuteRootCmd(t *testing.T) {
 	rootCmd.SetArgs([]string{"version"})
 	var buf bytes.Buffer
