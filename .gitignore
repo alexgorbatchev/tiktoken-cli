@@ -1,6 +1,7 @@
 # Binaries
 tiktoken
 tiktoken.exe
+bin/
 *.exe
 *.exe~
 *.dll
@@ -22,6 +23,7 @@ go.work
 # IDE
 .idea/
 .vscode/
+.codegraph
 *.swp
 *.swo
 

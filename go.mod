@@ -1,4 +1,4 @@
-module github.com/alexgorbatchev/tiktoken-go-cli
+module github.com/alexgorbatchev/tiktoken-cli
 
 go 1.25
 

@@ -28,9 +28,9 @@ builds:
         goarch: arm64
     ldflags:
       - -s -w
-      - -X github.com/alexgorbatchev/tiktoken-go-cli/cmd.version={{.Version}}
-      - -X github.com/alexgorbatchev/tiktoken-go-cli/cmd.commit={{.Commit}}
-      - -X github.com/alexgorbatchev/tiktoken-go-cli/cmd.date={{.Date}}
+      - -X github.com/alexgorbatchev/tiktoken-cli/cmd.version={{.Version}}
+      - -X github.com/alexgorbatchev/tiktoken-cli/cmd.commit={{.Commit}}
+      - -X github.com/alexgorbatchev/tiktoken-cli/cmd.date={{.Date}}
 
 archives:
   - id: default
@@ -67,7 +67,7 @@ changelog:
 release:
   github:
     owner: alexgorbatchev
-    name: tiktoken-go-cli
+    name: tiktoken-cli
   draft: false
   prerelease: auto
   name_template: "{{.ProjectName}} v{{.Version}}"

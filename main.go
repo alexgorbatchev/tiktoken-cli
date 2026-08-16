@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/alexgorbatchev/tiktoken-go-cli/cmd"
+	"github.com/alexgorbatchev/tiktoken-cli/cmd"
 )
 
 func main() {

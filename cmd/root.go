@@ -21,7 +21,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "tiktoken [text]",
 	Short: "A CLI tool for counting tokens using OpenAI's tiktoken",
-	Long: `tiktoken-go-cli is a command line interface for the tiktoken-go library.
+	Long: `tiktoken-cli is a command line interface for the tiktoken-go library.
 It allows you to count tokens in text using various OpenAI tokenization encodings.
 
 When called without a subcommand, it defaults to counting tokens using the

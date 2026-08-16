@@ -1,4 +1,4 @@
-# tiktoken-go-cli
+# tiktoken-cli
 
 A command-line interface for counting tokens using OpenAI's tiktoken tokenizer, powered by [tiktoken-go](https://github.com/pkoukk/tiktoken-go).
 
@@ -15,19 +15,19 @@ A command-line interface for counting tokens using OpenAI's tiktoken tokenizer, 
 
 ### Download Binary
 
-Download the latest release from the [releases page](https://github.com/alexgorbatchev/tiktoken-go-cli/releases).
+Download the latest release from the [releases page](https://github.com/alexgorbatchev/tiktoken-cli/releases).
 
 ### Build from Source
 
 ```bash
-go install github.com/alexgorbatchev/tiktoken-go-cli@latest
+go install github.com/alexgorbatchev/tiktoken-cli@latest
 ```
 
 Or clone and build:
 
 ```bash
-git clone https://github.com/alexgorbatchev/tiktoken-go-cli.git
-cd tiktoken-go-cli
+git clone https://github.com/alexgorbatchev/tiktoken-cli.git
+cd tiktoken-cli
 go build -o tiktoken
 ```
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Bash tests for tiktoken-go-cli
+# Bash tests for tiktoken-cli
 # Run with: ./test.sh
 
 # Colors for output
@@ -66,7 +66,7 @@ run_test_contains() {
 }
 
 echo "=========================================="
-echo "Running tiktoken-go-cli tests"
+echo "Running tiktoken-cli tests"
 echo "=========================================="
 echo ""
 
