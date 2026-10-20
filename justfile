@@ -36,11 +36,11 @@ test-integration: build
         local name="$1"
         local command="$2"
         local expected="$3"
-        
+
         echo -n "Testing: $name... "
         local output
         output=$(eval "$command" 2>&1) || true
-        
+
         if [ "$output" = "$expected" ]; then
             echo -e "${GREEN}PASSED${NC}"
             TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -56,11 +56,11 @@ test-integration: build
         local name="$1"
         local command="$2"
         local expected_pattern="$3"
-        
+
         echo -n "Testing: $name... "
         local output
         output=$(eval "$command" 2>&1) || true
-        
+
         if echo "$output" | grep -q "$expected_pattern"; then
             echo -e "${GREEN}PASSED${NC}"
             TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -180,3 +180,7 @@ lint:
 # Remove build artifacts
 clean:
     rm -rf bin/ tiktoken
+
+# Download project dependencies for local development
+setup:
+    go mod download
